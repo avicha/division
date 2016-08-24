@@ -5,7 +5,8 @@ window.onload = function() {
     var targetContext = targetCanvas.getContext('2d');
     var w, h, avgGray = 0,
         stdGray = 0,
-        delta = 3;
+        delta = 3,
+        quantity = 2;
     var grayScaleImage = function(sourceData) {
         var targetData = [];
         for (var i = 0, row = sourceData.length; i < row; i++) {
@@ -64,7 +65,9 @@ window.onload = function() {
                             currentZone = {
                                 tail: item,
                                 head: item,
-                                num: 1
+                                num: 1,
+                                i: item.i,
+                                j: item.j
                             };
                             zones.push(currentZone);
                         } else {
@@ -72,6 +75,8 @@ window.onload = function() {
                             currentZone.tail.next = item;
                             currentZone.tail = item;
                             currentZone.num++;
+                            currentZone.i += item.i;
+                            currentZone.j += item.j;
                         }
                         var n = item.i,
                             m = item.j,
@@ -115,11 +120,41 @@ window.onload = function() {
         });
         n = zones.length;
         console.log(n);
-        zones.forEach(function(zoneA) {
-            console.log(zones.map(function(zoneB) {
-                return (zoneA.num / zoneB.num);
-            }).join(', '));
+        // zones.forEach(function(zoneA) {
+        //     console.log(zones.map(function(zoneB) {
+        //         return (zoneA.num / zoneB.num);
+        //     }).join(', '));
+        // });
+        zones.forEach(function(zone) {
+            zone.i /= zone.num;
+            zone.j /= zone.num;
         });
+        console.log(zones);
+        if (n >= quantity) {
+            var n = 0;
+            var zone = zones[0];
+            var links = [];
+            while (zone && n < 20) {
+                links.push(zone);
+                n++;
+                zone.n = n;
+                var minDisZone = null,
+                    minDis = Infinity;
+                zones.forEach(function(z) {
+                    if (!z.n) {
+                        var dis = (z.i - zone.i) * (z.i - zone.i) + (z.j - zone.j) * (z.j - zone.j);
+                        if (dis < minDis) {
+                            minDis = dis;
+                            minDisZone = z;
+                        }
+                    }
+                });
+                zone = minDisZone;
+            }
+            console.log(links);
+        } else {
+            console.error('数量不足');
+        }
     };
     var renderImage = function(url, callback) {
         var image = new Image();
