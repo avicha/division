@@ -129,13 +129,18 @@ window.onload = function() {
             zone.i /= zone.num;
             zone.j /= zone.num;
         });
-        console.log(zones);
         if (n >= quantity) {
             var n = 0;
             var zone = zones[0];
-            var links = [];
-            while (zone && n < 20) {
-                links.push(zone);
+            var head, tail;
+            while (zone) {
+                if (!head) {
+                    head = zone;
+                } else {
+                    tail.next = zone;
+                    zone.prev = tail;
+                }
+                tail = zone;
                 n++;
                 zone.n = n;
                 var minDisZone = null,
@@ -151,7 +156,9 @@ window.onload = function() {
                 });
                 zone = minDisZone;
             }
-            console.log(links);
+            tail.next = head;
+            head.prev = tail;
+            return head;
         } else {
             console.error('数量不足');
         }
@@ -222,6 +229,34 @@ window.onload = function() {
         }
         targetContext.putImageData(imgData, 0, 0);
     };
+    var drawZones = function(link) {
+        var object = link;
+        targetCanvas.width = sourceCanvas.width;
+        targetCanvas.height = sourceCanvas.height;
+        targetContext.strokeStyle = '#f00';
+        targetContext.beginPath();
+        targetContext.moveTo(object.j, object.i);
+        while (object.next != link) {
+            // var p1 = object,
+            //     p2 = object;
+            // for (var i = 0; i < quantity; i++) {
+            //     p2 = p2.next;
+            // }
+            // var s1 = {
+            //     i: (p1.i + p1.prev.i) / 2,
+            //     j: (p1.j + p1.prev.j) / 2,
+            // };
+            // var s2 = {
+            //     i: (p2.i + p2.next.i) / 2,
+            //     j: (p2.j + p2.next.j) / 2,
+            // };
+            object = object.next;
+            targetContext.lineTo(object.j, object.i);
+        }
+        targetContext.lineTo(link.j, link.i);
+        targetContext.stroke();
+        targetContext.closePath();
+    };
     document.addEventListener('dragover', function(e) {
         e.preventDefault();
     }, false);
@@ -234,9 +269,10 @@ window.onload = function() {
                 var base64 = e.target.result;
                 renderImage(base64, function() {
                     var sourceData = getImageData();
-                    getZones(sourceData);
-                    var targetData = binarizationImage(grayScaleImage(sourceData));
-                    drawImage(targetData);
+                    var link = getZones(sourceData);
+                    drawZones(link);
+                    // var targetData = binarizationImage(grayScaleImage(sourceData));
+                    // drawImage(targetData);
                 });
             };
             reader.readAsDataURL(file);
